@@ -1,40 +1,33 @@
-from openai import OpenAI
+import os
+from dotenv import load_dotenv
+import google.generativeai as genai
 
-client = OpenAI(api_key="YOUR_API_KEY")
+# Load API key
+load_dotenv()
+api_key =os.getenv("GEMINI_API_KEY")
 
-messages = []
+genai.configure(api_key="AIzaSyC0_SWlmV3OndK72MD6eKebjQMe6qtUBE8")
 
-print("Paste your notes:")
+model = genai.GenerativeModel("gemini-1.5-flash")  # updated model
+
+print("📘 Paste your lecture notes:")
 notes = input()
 
-# summary
-response = client.chat.completions.create(
-    model="gpt-4o-mini",
-    messages=[{"role": "user", "content": f"Summarize:\n{notes}"}]
-)
+# -------- SUMMARY --------
+prompt = f"""
+Summarize these notes:
+- Title
+- 3-5 key points
+- Action items
 
-print("\nSummary:\n", response.choices[0].message.content)
+Notes:
+{notes}
+"""
 
-messages.append({"role": "system", "content": notes})
+try:
+    response = model.generate_content(prompt)
+    print("\n📌 Summary:\n", response.text)
+except Exception as e:
+    print("⚠️ Error:", e)
 
-while True:
-    user = input("\nYou: ")
 
-    if user.lower() == "exit":
-        break
-
-    messages.append({"role": "user", "content": user})
-
-    try:
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=messages
-        )
-
-        reply = response.choices[0].message.content
-        print("Bot:", reply)
-
-        messages.append({"role": "assistant", "content": reply})
-
-    except:
-        print("Error, try again")
